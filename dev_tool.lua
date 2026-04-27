@@ -1,6 +1,22 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+local function SafeLoad(url)
+    local success, result = pcall(function()
+        return loadstring(game:HttpGet(url .. "?t=" .. tostring(tick())))()
+    end)
+    if not success or not result then
+        warn("Lỗi tải script từ: " .. url)
+        print("Chi tiết lỗi:", result)
+        return nil
+    end
+    return result
+end
+
+print("Đang khởi tạo AI Bridge...")
+
+local Fluent = SafeLoad("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/main.lua")
+if not Fluent then return end
+
+local SaveManager = SafeLoad("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua")
+local InterfaceManager = SafeLoad("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua")
 
 local Window = Fluent:CreateWindow({
     Title = "Dev Scanner (Host)",
@@ -12,7 +28,7 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.RightControl
 })
 
--- Nút Toggle Menu (Giống Auto Fruit)
+-- Nút Toggle Menu
 local ToggleGui = Instance.new("ScreenGui")
 ToggleGui.Name = "DevScannerToggle"
 ToggleGui.Parent = game:GetService("CoreGui")
@@ -48,7 +64,7 @@ local Tabs = {
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
--- Hàm gửi dữ liệu về Host
+-- Hàm gửi dữ liệu về Host (Sử dụng IP máy tính của bạn)
 local function SendToHost(data)
     local url = "http://192.168.1.4:3000/save"
     local HttpService = game:GetService("HttpService")
@@ -174,27 +190,27 @@ local function PollCommand()
             if response.StatusCode == 200 and response.Body and response.Body ~= "" then
                 AIStatusPara:SetDesc("🟡 Đang thực thi lệnh...\n" .. string.sub(response.Body, 1, 40) .. "...")
                 print("[AI Bridge]: Nhận được lệnh mới!")
-            
-            local func, err = loadstring(response.Body)
-            if func then
-                local execSuccess, result = pcall(func)
-                if execSuccess then
-                    SendToHost("==== AI RESULT ====\n" .. tostring(result) .. "\n===================")
-                    AIStatusPara:SetDesc("✅ Lệnh thực thi thành công!")
+                
+                local func, err = loadstring(response.Body)
+                if func then
+                    local execSuccess, result = pcall(func)
+                    if execSuccess then
+                        SendToHost("==== AI RESULT ====\n" .. tostring(result) .. "\n===================")
+                        AIStatusPara:SetDesc("✅ Lệnh thực thi thành công!")
+                    else
+                        SendToHost("[AI ERROR - EXECUTION]: " .. tostring(result))
+                        AIStatusPara:SetDesc("❌ Lỗi thực thi:\n" .. tostring(result))
+                    end
                 else
-                    SendToHost("[AI ERROR - EXECUTION]: " .. tostring(result))
-                    AIStatusPara:SetDesc("❌ Lỗi thực thi:\n" .. tostring(result))
+                    SendToHost("[AI ERROR - PARSING]: " .. tostring(err))
+                    AIStatusPara:SetDesc("❌ Lỗi phân tích cú pháp:\n" .. tostring(err))
                 end
-            else
-                SendToHost("[AI ERROR - PARSING]: " .. tostring(err))
-                AIStatusPara:SetDesc("❌ Lỗi phân tích cú pháp:\n" .. tostring(err))
+                
+                task.delay(2.5, function()
+                    AIStatusPara:SetDesc("🟢 Đang chờ lệnh từ AI...")
+                end)
             end
-            
-            task.delay(2.5, function()
-                AIStatusPara:SetDesc("🟢 Đang chờ lệnh từ AI...")
-            end)
-        end
-    elseif not success then
+        elseif not success then
             print("[AI Bridge Error]: Không thể kết nối tới server (192.168.1.4:3000). Hãy chắc chắn máy tính và điện thoại chung Wi-Fi!")
             warn("Lỗi kết nối AI Bridge:", response)
         end
@@ -208,14 +224,19 @@ task.spawn(function()
     end
 end)
 
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-InterfaceManager:SetFolder("FluentDevScanner")
-SaveManager:SetFolder("FluentDevScanner/specific-game")
-SaveManager:BuildConfigSection(Tabs.Settings)
-InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+if SaveManager then
+    SaveManager:SetLibrary(Fluent)
+    SaveManager:IgnoreThemeSettings()
+    SaveManager:SetIgnoreIndexes({})
+    SaveManager:SetFolder("FluentDevScanner/specific-game")
+    SaveManager:BuildConfigSection(Tabs.Settings)
+end
+
+if InterfaceManager then
+    InterfaceManager:SetLibrary(Fluent)
+    InterfaceManager:SetFolder("FluentDevScanner")
+    InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+end
 
 Window:SelectTab(1)
 Fluent:Notify({
