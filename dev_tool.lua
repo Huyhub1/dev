@@ -1,11 +1,21 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+print("Loading Fluent UI...")
+local success, Fluent = pcall(function()
+    return loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+end)
+
+if not success or type(Fluent) ~= "table" then
+    print("Lỗi tải Fluent UI:", Fluent)
+    warn("Không thể tải Fluent UI. Vui lòng kiểm tra lại mạng hoặc executor của bạn.")
+    return
+end
+print("Fluent UI loaded successfully!")
 
 local Window = Fluent:CreateWindow({
     Title = "Dev Scanner (Host)",
     SubTitle = "AI-Roblox Bridge",
     TabWidth = 160,
     Size = UDim2.fromOffset(500, 350),
-    Acrylic = true,
+    Acrylic = false,
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.RightControl
 })
