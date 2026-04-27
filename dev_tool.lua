@@ -166,13 +166,14 @@ local AIStatusPara = Tabs.AI:AddParagraph({
 })
 
 local function PollCommand()
-    local url = "http://localhost:3000/get_command"
+    local url = "http://127.0.0.1:3000/get_command"
     local req = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
     if req then
         local success, response = pcall(req, {Url = url, Method = "GET"})
-        if success and response and response.StatusCode == 200 and response.Body and response.Body ~= "" then
-            AIStatusPara:SetDesc("🟡 Đang thực thi lệnh...\n" .. string.sub(response.Body, 1, 40) .. "...")
-            print("[AI Command Received]: Executing...")
+        if success and response then
+            if response.StatusCode == 200 and response.Body and response.Body ~= "" then
+                AIStatusPara:SetDesc("🟡 Đang thực thi lệnh...\n" .. string.sub(response.Body, 1, 40) .. "...")
+                print("[AI Bridge]: Nhận được lệnh mới!")
             
             local func, err = loadstring(response.Body)
             if func then
@@ -192,6 +193,9 @@ local function PollCommand()
             task.delay(2.5, function()
                 AIStatusPara:SetDesc("🟢 Đang chờ lệnh từ AI...")
             end)
+        elseif not success then
+            print("[AI Bridge Error]: Không thể kết nối tới server (127.0.0.1:3000). Hãy chắc chắn bạn đã chạy node host_server.js!")
+            warn("Lỗi kết nối AI Bridge:", response)
         end
     end
 end
