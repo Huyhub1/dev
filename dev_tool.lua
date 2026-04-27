@@ -50,7 +50,7 @@ local Tabs = {
 
 -- Hàm gửi dữ liệu về Host
 local function SendToHost(data)
-    local url = "http://localhost:3000/save"
+    local url = "http://192.168.1.4:3000/save"
     local HttpService = game:GetService("HttpService")
     local body = HttpService:JSONEncode({
         filename = "collected_data.txt",
@@ -166,7 +166,7 @@ local AIStatusPara = Tabs.AI:AddParagraph({
 })
 
 local function PollCommand()
-    local url = "http://127.0.0.1:3000/get_command"
+    local url = "http://192.168.1.4:3000/get_command"
     local req = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
     if req then
         local success, response = pcall(req, {Url = url, Method = "GET"})
@@ -194,7 +194,7 @@ local function PollCommand()
                 AIStatusPara:SetDesc("🟢 Đang chờ lệnh từ AI...")
             end)
         elseif not success then
-            print("[AI Bridge Error]: Không thể kết nối tới server (127.0.0.1:3000). Hãy chắc chắn bạn đã chạy node host_server.js!")
+            print("[AI Bridge Error]: Không thể kết nối tới server (192.168.1.4:3000). Hãy chắc chắn máy tính và điện thoại chung Wi-Fi!")
             warn("Lỗi kết nối AI Bridge:", response)
         end
     end
