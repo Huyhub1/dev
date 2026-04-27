@@ -35,7 +35,7 @@ local Tabs = {
 
 -- Hàm gửi dữ liệu về Host (IP máy tính của bạn)
 local function SendToHost(data)
-    local url = "https://chubby-lamps-live.loca.lt/save"
+    local url = "https://residence-modes-figures-chocolate.trycloudflare.com/save"
     local HttpService = game:GetService("HttpService")
     local body = HttpService:JSONEncode({
         filename = "collected_data.txt",
@@ -48,8 +48,7 @@ local function SendToHost(data)
             Url = url, 
             Method = "POST", 
             Headers = {
-                ["Content-Type"] = "application/json",
-                ["Bypass-Tunnel-Reminder"] = "true"
+                ["Content-Type"] = "application/json"
             }, 
             Body = body
         })
@@ -152,13 +151,12 @@ local AIStatusPara = Tabs.AI:CreateParagraph({
 })
 
 local function PollCommand()
-    local url = "https://chubby-lamps-live.loca.lt/get_command"
+    local url = "https://residence-modes-figures-chocolate.trycloudflare.com/get_command"
     local req = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
     if req then
         local success, response = pcall(req, {
             Url = url, 
-            Method = "GET",
-            Headers = {["Bypass-Tunnel-Reminder"] = "true"}
+            Method = "GET"
         })
         if success and response then
             if response.StatusCode == 200 and response.Body and response.Body ~= "" then
