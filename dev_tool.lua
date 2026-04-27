@@ -1,70 +1,39 @@
-local function SafeLoad(url)
-    local success, result = pcall(function()
-        return loadstring(game:HttpGet(url))()
-    end)
-    if not success or not result then
-        warn("Lỗi tải script từ: " .. url)
-        print("Chi tiết lỗi:", result)
-        return nil
-    end
-    return result
-end
+local ProxyLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/ProxyHubDev/Proxy.Lib/refs/heads/main/Libary/main.lua"))()
+local lib = ProxyLib.new()
 
-print("Đang khởi tạo AI Bridge...")
-
-local Fluent = SafeLoad("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/main.lua")
-if not Fluent then return end
-
-local SaveManager = SafeLoad("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua")
-local InterfaceManager = SafeLoad("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua")
-
-local Window = Fluent:CreateWindow({
-    Title = "Dev Scanner (Host)",
-    SubTitle = "AI-Roblox Bridge",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(500, 350),
-    Acrylic = false,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.RightControl
+local window = lib:CreateWindow({
+    Title = "Dev Scanner",
+    Subtitle = "AI-Roblox Bridge",
+    Theme = "Dark", -- "Dark" or "White"
+    Icon = "rbxassetid://15124016666",
+    Size = Vector2.new(520, 380),
+    TitleConfig = {
+        Words = { "Dev", "Scanner" },
+        Gradient = true, 
+        Colors = { Color3.fromRGB(55, 110, 200), Color3.fromRGB(170, 120, 255) },
+    },
+    FloatButton = {
+        Shape = "Circle",
+        Color = "White",
+        Size = 50,
+    },
+    Acrylic = {
+        Enabled = false,
+        Opacity = 0.5,
+    },
+    ConfigPanel = {
+        Enabled = true,
+        Fps = true,
+        Ping = true,
+    },
 })
 
--- Nút Toggle Menu
-local ToggleGui = Instance.new("ScreenGui")
-ToggleGui.Name = "DevScannerToggle"
-ToggleGui.Parent = game:GetService("CoreGui")
-ToggleGui.ResetOnSpawn = false
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Name = "ToggleButton"
-ToggleBtn.Parent = ToggleGui
-ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
-ToggleBtn.Position = UDim2.new(0, 20, 0, 80)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.Text = "MENU"
-ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.TextSize = 14
-ToggleBtn.Active = true
-ToggleBtn.Draggable = true
-Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1, 0)
-local UIStroke = Instance.new("UIStroke", ToggleBtn)
-UIStroke.Color = Color3.fromRGB(170, 120, 255)
-UIStroke.Thickness = 2
-local VirtualInputManager = game:GetService("VirtualInputManager")
-ToggleBtn.MouseButton1Click:Connect(function()
-    pcall(function()
-        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.RightControl, false, game)
-        task.wait(0.1)
-        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.RightControl, false, game)
-    end)
-end)
-
 local Tabs = {
-    Tools = Window:AddTab({ Title = "Công cụ Scan", Icon = "wrench" }),
-    AI = Window:AddTab({ Title = "AI Status", Icon = "bot" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+    Tools = window:CreateTab({ Title = "Tools", Subtitle = "Scan & Collect", Icon = "rbxassetid://15124016666" }),
+    AI = window:CreateTab({ Title = "AI Bridge", Subtitle = "Command Center", Icon = "rbxassetid://15124016666" })
 }
 
--- Hàm gửi dữ liệu về Host (Sử dụng IP máy tính của bạn)
+-- Hàm gửi dữ liệu về Host (IP máy tính của bạn)
 local function SendToHost(data)
     local url = "http://192.168.1.4:3000/save"
     local HttpService = game:GetService("HttpService")
@@ -85,28 +54,29 @@ local function GetCharacter()
 end
 
 -- ====================
--- TAB CÔNG CỤ
+-- TAB TOOLS
 -- ====================
-Tabs.Tools:AddButton({
-    Title = "📍 Lấy Tọa Độ -> Host",
-    Description = "Lấy CFrame của nhân vật",
+Tabs.Tools:CreateSection({ Text = "Data Scanning" })
+
+Tabs.Tools:CreateButton({
+    Title = "📍 Scan CFrame",
+    Description = "Gửi tọa độ nhân vật về Host",
     Callback = function()
         local char = GetCharacter()
         local root = char:FindFirstChild("HumanoidRootPart")
         if root then
             local data = "[CFRAME]: CFrame.new(" .. tostring(root.Position) .. ")"
-            print(data)
             SendToHost(data)
-            Fluent:Notify({Title="Thành công", Content="Đã gửi Tọa độ", Duration=2})
+            window:Notify({Title="Success", Text="Sent CFrame to Host", Duration=3})
         end
-    end
+    end,
 })
 
-Tabs.Tools:AddButton({
-    Title = "🖱️ Lấy GUI Info -> Host",
-    Description = "Click vào màn hình để lấy tên nút/khung",
+Tabs.Tools:CreateButton({
+    Title = "🖱️ Scan GUI (Click)",
+    Description = "Bật chế độ click để lấy path GUI",
     Callback = function()
-        Fluent:Notify({Title="GUI Scanner", Content="Hãy click vào một GUI bất kỳ trên màn hình!", Duration=3})
+        window:Notify({Title="GUI Scanner", Text="Hãy click vào một GUI trên màn hình!", Duration=3})
         local UIS = game:GetService("UserInputService")
         local PlayerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
         local conn
@@ -115,70 +85,62 @@ Tabs.Tools:AddButton({
                 local guis = PlayerGui:GetGuiObjectsAtPosition(UIS:GetMouseLocation().X, UIS:GetMouseLocation().Y)
                 if #guis > 0 then
                     local info = "[GUI CLICK DATA]:"
-                    for i = 1, math.min(#guis, 20) do
+                    for i = 1, math.min(#guis, 15) do
                         local v = guis[i]
-                        info = info .. "\n" .. i .. ". " .. v.Name .. " (" .. v.ClassName .. ") | Path: " .. v:GetFullName() .. " | Text: " .. (v:IsA("TextButton") or v:IsA("TextLabel") and v.Text or "N/A")
+                        info = info .. "\n" .. i .. ". " .. v.Name .. " (" .. v.ClassName .. ") | Path: " .. v:GetFullName()
                     end
-                    print("\n" .. info)
                     SendToHost(info)
-                    Fluent:Notify({Title="Thành công", Content="Đã gửi dữ liệu GUI", Duration=2})
+                    window:Notify({Title="Success", Text="Sent GUI data", Duration=3})
                 end
                 conn:Disconnect()
             end
         end)
-    end
+    end,
 })
 
-Tabs.Tools:AddButton({
-    Title = "📦 Lấy Vật Thể Gần -> Host",
-    Description = "Scan các part trong bán kính 25 stud",
+Tabs.Tools:CreateButton({
+    Title = "📦 Scan Objects",
+    Description = "Scan vật thể xung quanh (25 studs)",
     Callback = function()
         local char = GetCharacter()
         local root = char:FindFirstChild("HumanoidRootPart")
         if root then
+            local mapInfo = "[OBJECT SCAN NEARBY]:\n"
             for _, v in pairs(game:GetService("Workspace"):GetPartBoundsInRadius(root.Position, 25)) do
                 if not v:IsDescendantOf(char) then
-                    local info = "[OBJECT]: Name='" .. v.Name .. "' Path='" .. v:GetFullName() .. "'"
-                    print("\n" .. info)
-                    SendToHost(info)
-                    Fluent:Notify({Title="Thành công", Content="Đã gửi Vật thể: " .. v.Name, Duration=2})
-                    break
+                    mapInfo = mapInfo .. "- " .. v.Name .. " | " .. v:GetFullName() .. "\n"
                 end
             end
+            SendToHost(mapInfo)
+            window:Notify({Title="Success", Text="Sent Nearby Objects", Duration=3})
         end
-    end
+    end,
 })
 
-Tabs.Tools:AddButton({
-    Title = "🗺️ Check Map -> Host",
-    Description = "Lấy danh sách các thư mục lớn trong Workspace",
+Tabs.Tools:CreateButton({
+    Title = "🗺️ Full Workspace Scan",
+    Description = "Lấy danh sách Workspace Children",
     Callback = function()
-        local mapInfo = "[MAP SCAN]:\n"
+        local mapInfo = "[WORKSPACE SCAN]:\n"
         for _, v in pairs(game:GetService("Workspace"):GetChildren()) do
-            if not (v:IsA("Camera") or v:IsA("Terrain") or v.Name == "Baseplate" or v.Name == "Camera") and not game:GetService("Players"):GetPlayerFromCharacter(v) then
+            if not game:GetService("Players"):GetPlayerFromCharacter(v) then
                  mapInfo = mapInfo .. "- " .. v.Name .. " [" .. v.ClassName .. "]\n"
             end
         end
-        print("\n" .. mapInfo)
         SendToHost(mapInfo)
-        Fluent:Notify({Title="Thành công", Content="Đã gửi Map Info", Duration=2})
-    end
-})
-
-Tabs.Tools:AddButton({
-    Title = "🗑️ Xóa Console",
-    Description = "Dọn sạch F9 (Developer Console)",
-    Callback = function()
-        for i = 1, 50 do print(" ") end
-    end
+        window:Notify({Title="Success", Text="Sent Full Scan", Duration=3})
+    end,
 })
 
 -- ====================
 -- TAB AI STATUS
 -- ====================
-local AIStatusPara = Tabs.AI:AddParagraph({
-    Title = "Kết nối Cầu nối AI-Roblox",
-    Content = "🟢 Đang chờ lệnh từ AI..."
+Tabs.AI:CreateSection({ Text = "Bridge Status" })
+
+local AIStatusPara = Tabs.AI:CreateParagraph({
+    Title = "Bridge Connection",
+    Description = "🟢 Waiting for AI command...",
+    Icon = "rbxassetid://15124016666"
 })
 
 local function PollCommand()
@@ -188,31 +150,35 @@ local function PollCommand()
         local success, response = pcall(req, {Url = url, Method = "GET"})
         if success and response then
             if response.StatusCode == 200 and response.Body and response.Body ~= "" then
-                AIStatusPara:SetDesc("🟡 Đang thực thi lệnh...\n" .. string.sub(response.Body, 1, 40) .. "...")
-                print("[AI Bridge]: Nhận được lệnh mới!")
+                AIStatusPara:SetTitle("🟡 Executing Command...")
+                AIStatusPara:SetDescription("Receiving: " .. string.sub(response.Body, 1, 30) .. "...")
                 
                 local func, err = loadstring(response.Body)
                 if func then
                     local execSuccess, result = pcall(func)
                     if execSuccess then
                         SendToHost("==== AI RESULT ====\n" .. tostring(result) .. "\n===================")
-                        AIStatusPara:SetDesc("✅ Lệnh thực thi thành công!")
+                        AIStatusPara:SetTitle("✅ Success!")
+                        AIStatusPara:SetDescription("Executed successfully at " .. os.date("%X"))
                     else
                         SendToHost("[AI ERROR - EXECUTION]: " .. tostring(result))
-                        AIStatusPara:SetDesc("❌ Lỗi thực thi:\n" .. tostring(result))
+                        AIStatusPara:SetTitle("❌ Execution Error")
+                        AIStatusPara:SetDescription(tostring(result))
                     end
                 else
                     SendToHost("[AI ERROR - PARSING]: " .. tostring(err))
-                    AIStatusPara:SetDesc("❌ Lỗi phân tích cú pháp:\n" .. tostring(err))
+                    AIStatusPara:SetTitle("❌ Parsing Error")
+                    AIStatusPara:SetDescription(tostring(err))
                 end
                 
-                task.delay(2.5, function()
-                    AIStatusPara:SetDesc("🟢 Đang chờ lệnh từ AI...")
+                task.delay(3, function()
+                    AIStatusPara:SetTitle("Bridge Connection")
+                    AIStatusPara:SetDescription("🟢 Waiting for AI command...")
                 end)
             end
         elseif not success then
-            print("[AI Bridge Error]: Không thể kết nối tới server (192.168.1.4:3000). Hãy chắc chắn máy tính và điện thoại chung Wi-Fi!")
-            warn("Lỗi kết nối AI Bridge:", response)
+            AIStatusPara:SetTitle("❌ Connection Failed")
+            AIStatusPara:SetDescription("Cannot reach http://192.168.1.4:3000")
         end
     end
 end
@@ -224,23 +190,8 @@ task.spawn(function()
     end
 end)
 
-if SaveManager then
-    SaveManager:SetLibrary(Fluent)
-    SaveManager:IgnoreThemeSettings()
-    SaveManager:SetIgnoreIndexes({})
-    SaveManager:SetFolder("FluentDevScanner/specific-game")
-    SaveManager:BuildConfigSection(Tabs.Settings)
-end
-
-if InterfaceManager then
-    InterfaceManager:SetLibrary(Fluent)
-    InterfaceManager:SetFolder("FluentDevScanner")
-    InterfaceManager:BuildInterfaceSection(Tabs.Settings)
-end
-
-Window:SelectTab(1)
-Fluent:Notify({
-    Title = "Bridge Ready",
-    Content = "AI-Roblox Bridge đã sẵn sàng!",
-    Duration = 5
+window:Notify({
+    Title = "Proxy.Lib Initialized",
+    Text = "AI Bridge is ready on 192.168.1.4",
+    Duration = 5,
 })
