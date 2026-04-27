@@ -193,7 +193,8 @@ local function PollCommand()
             task.delay(2.5, function()
                 AIStatusPara:SetDesc("🟢 Đang chờ lệnh từ AI...")
             end)
-        elseif not success then
+        end
+    elseif not success then
             print("[AI Bridge Error]: Không thể kết nối tới server (192.168.1.4:3000). Hãy chắc chắn máy tính và điện thoại chung Wi-Fi!")
             warn("Lỗi kết nối AI Bridge:", response)
         end
