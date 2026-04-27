@@ -35,7 +35,7 @@ local Tabs = {
 
 -- Hàm gửi dữ liệu về Host (IP máy tính của bạn)
 local function SendToHost(data)
-    local url = "https://better-nights-beg.loca.lt/save"
+    local url = "https://chubby-lamps-live.loca.lt/save"
     local HttpService = game:GetService("HttpService")
     local body = HttpService:JSONEncode({
         filename = "collected_data.txt",
@@ -152,7 +152,7 @@ local AIStatusPara = Tabs.AI:CreateParagraph({
 })
 
 local function PollCommand()
-    local url = "https://better-nights-beg.loca.lt/get_command"
+    local url = "https://chubby-lamps-live.loca.lt/get_command"
     local req = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
     if req then
         local success, response = pcall(req, {
@@ -190,7 +190,7 @@ local function PollCommand()
             end
         elseif not success then
             AIStatusPara:SetTitle("❌ Connection Failed")
-            AIStatusPara:SetDescription("Cannot reach https://better-nights-beg.loca.lt")
+            AIStatusPara:SetDescription("Cannot reach https://chubby-lamps-live.loca.lt")
         end
     end
 end
