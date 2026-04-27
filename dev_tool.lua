@@ -1,14 +1,6 @@
-print("Loading Fluent UI...")
-local success, Fluent = pcall(function()
-    return loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-end)
-
-if not success or type(Fluent) ~= "table" then
-    print("Lỗi tải Fluent UI:", Fluent)
-    warn("Không thể tải Fluent UI. Vui lòng kiểm tra lại mạng hoặc executor của bạn.")
-    return
-end
-print("Fluent UI loaded successfully!")
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
     Title = "Dev Scanner (Host)",
@@ -20,9 +12,40 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.RightControl
 })
 
+-- Nút Toggle Menu (Giống Auto Fruit)
+local ToggleGui = Instance.new("ScreenGui")
+ToggleGui.Name = "DevScannerToggle"
+ToggleGui.Parent = game:GetService("CoreGui")
+ToggleGui.ResetOnSpawn = false
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Name = "ToggleButton"
+ToggleBtn.Parent = ToggleGui
+ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleBtn.Position = UDim2.new(0, 20, 0, 80)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Text = "MENU"
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 14
+ToggleBtn.Active = true
+ToggleBtn.Draggable = true
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1, 0)
+local UIStroke = Instance.new("UIStroke", ToggleBtn)
+UIStroke.Color = Color3.fromRGB(170, 120, 255)
+UIStroke.Thickness = 2
+local VirtualInputManager = game:GetService("VirtualInputManager")
+ToggleBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.RightControl, false, game)
+        task.wait(0.1)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.RightControl, false, game)
+    end)
+end)
+
 local Tabs = {
     Tools = Window:AddTab({ Title = "Công cụ Scan", Icon = "wrench" }),
-    AI = Window:AddTab({ Title = "AI Status", Icon = "bot" })
+    AI = Window:AddTab({ Title = "AI Status", Icon = "bot" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
 -- Hàm gửi dữ liệu về Host
@@ -180,9 +203,18 @@ task.spawn(function()
     end
 end)
 
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FluentDevScanner")
+SaveManager:SetFolder("FluentDevScanner/specific-game")
+SaveManager:BuildConfigSection(Tabs.Settings)
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+
 Window:SelectTab(1)
 Fluent:Notify({
     Title = "Bridge Ready",
-    Content = "AI-Roblox Bridge đã sẵn sàng!\nNhấn RightControl để ẩn menu.",
+    Content = "AI-Roblox Bridge đã sẵn sàng!",
     Duration = 5
 })
