@@ -1,6 +1,6 @@
 local function SafeLoad(url)
     local success, result = pcall(function()
-        return loadstring(game:HttpGet(url .. "?t=" .. tostring(tick())))()
+        return loadstring(game:HttpGet(url))()
     end)
     if not success or not result then
         warn("Lỗi tải script từ: " .. url)
