@@ -35,7 +35,7 @@ local Tabs = {
 
 -- Hàm gửi dữ liệu về Host (IP máy tính của bạn)
 local function SendToHost(data)
-    local url = "http://192.168.1.4:3000/save"
+    local url = "https://better-nights-beg.loca.lt/save"
     local HttpService = game:GetService("HttpService")
     local body = HttpService:JSONEncode({
         filename = "collected_data.txt",
@@ -44,7 +44,15 @@ local function SendToHost(data)
     })
     local req = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
     if req then
-        pcall(req, {Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = body})
+        pcall(req, {
+            Url = url, 
+            Method = "POST", 
+            Headers = {
+                ["Content-Type"] = "application/json",
+                ["Bypass-Tunnel-Reminder"] = "true"
+            }, 
+            Body = body
+        })
     end
 end
 
@@ -144,10 +152,14 @@ local AIStatusPara = Tabs.AI:CreateParagraph({
 })
 
 local function PollCommand()
-    local url = "http://192.168.1.4:3000/get_command"
+    local url = "https://better-nights-beg.loca.lt/get_command"
     local req = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
     if req then
-        local success, response = pcall(req, {Url = url, Method = "GET"})
+        local success, response = pcall(req, {
+            Url = url, 
+            Method = "GET",
+            Headers = {["Bypass-Tunnel-Reminder"] = "true"}
+        })
         if success and response then
             if response.StatusCode == 200 and response.Body and response.Body ~= "" then
                 AIStatusPara:SetTitle("🟡 Executing Command...")
@@ -178,7 +190,7 @@ local function PollCommand()
             end
         elseif not success then
             AIStatusPara:SetTitle("❌ Connection Failed")
-            AIStatusPara:SetDescription("Cannot reach http://192.168.1.4:3000")
+            AIStatusPara:SetDescription("Cannot reach https://better-nights-beg.loca.lt")
         end
     end
 end
