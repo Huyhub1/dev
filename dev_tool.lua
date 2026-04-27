@@ -34,7 +34,7 @@ local Main = CreateElement("Frame", {
     BackgroundColor3 = Color3.fromRGB(25, 25, 25),
     BorderSizePixel = 0,
     Position = UDim2.new(0.02, 0, 0.3, 0),
-    Size = UDim2.new(0, 220, 0, 400),
+    Size = UDim2.new(0, 220, 0, 440),
     Visible = false,
     Active = true,
     Draggable = true
@@ -212,6 +212,18 @@ AddFuncButton("🗑️ Xóa Console", Color3.fromRGB(80, 80, 80), UDim2.new(0.05
     for i = 1, 50 do print(" ") end
 end)
 
+local AIStatus = CreateElement("TextLabel", {
+    Parent = Main,
+    Size = UDim2.new(0.9, 0, 0, 25),
+    Position = UDim2.new(0.05, 0, 0.92, 0),
+    BackgroundColor3 = Color3.fromRGB(35, 35, 35),
+    Text = "AI Status: Idle",
+    TextColor3 = Color3.fromRGB(0, 255, 0),
+    TextSize = 12,
+    Font = Enum.Font.SourceSansBold
+})
+CreateElement("UICorner", {CornerRadius = UDim.new(0, 6), Parent = AIStatus})
+
 -- AI-Roblox Bridge Polling
 local function PollCommand()
     local url = "http://localhost:3000/get_command"
@@ -219,20 +231,39 @@ local function PollCommand()
     if req then
         local success, response = pcall(req, {Url = url, Method = "GET"})
         if success and response and response.StatusCode == 200 and response.Body and response.Body ~= "" then
+            AIStatus.Text = "AI Status: Executing..."
+            AIStatus.TextColor3 = Color3.fromRGB(255, 255, 0)
             print("[AI Command Received]: Executing...")
+            
             local func, err = loadstring(response.Body)
             if func then
                 local execSuccess, result = pcall(func)
                 if execSuccess then
                     if result then
                         SendToHost("==== AI RESULT ====\n" .. tostring(result) .. "\n===================")
+                        AIStatus.Text = "AI Status: Success!"
+                        AIStatus.TextColor3 = Color3.fromRGB(0, 255, 0)
+                    else
+                        AIStatus.Text = "AI Status: Success (No return)"
+                        AIStatus.TextColor3 = Color3.fromRGB(0, 255, 0)
                     end
                 else
                     SendToHost("[AI ERROR - EXECUTION]: " .. tostring(result))
+                    AIStatus.Text = "AI Status: Error!"
+                    AIStatus.TextColor3 = Color3.fromRGB(255, 0, 0)
                 end
             else
                 SendToHost("[AI ERROR - PARSING]: " .. tostring(err))
+                AIStatus.Text = "AI Status: Parse Error!"
+                AIStatus.TextColor3 = Color3.fromRGB(255, 0, 0)
             end
+            
+            task.delay(2, function()
+                if AIStatus.Text:find("Success") or AIStatus.Text:find("Error") then
+                    AIStatus.Text = "AI Status: Idle"
+                    AIStatus.TextColor3 = Color3.fromRGB(0, 255, 0)
+                end
+            end)
         end
     end
 end
